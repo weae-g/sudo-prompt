@@ -1,61 +1,68 @@
-# sudo-prompt
+# sudo-prompt (запрос)
 
-Run a non-graphical terminal command using `sudo`, prompting the user with a graphical OS dialog if necessary. Useful for background Node.js applications or native Electron apps that need `sudo`.
+Запустите неграфическую команду терминала, используя `sudo`, при необходимости предложив пользователю графический диалог операционной системы. Полезно для фоновых приложений Node.js или собственных электронных приложений, которым требуется `sudo`.
 
-## Cross-Platform
-`sudo-prompt` provides a native OS dialog prompt on **macOS**, **Linux** and **Windows**.
+## Кросс-платформенный
 
-![macOS](https://raw.githubusercontent.com/jorangreef/sudo-prompt/master/macos.png)
+`sudo-prompt` предоставляет встроенное диалоговое окно операционной системы на **macOS**, **Linux** и **Windows**.
 
-![Linux](https://raw.githubusercontent.com/jorangreef/sudo-prompt/master/linux.png)
+![macOS](https://raw.githubusercontent.com/weae-g/sudo-prompt/master/macos.png)
 
-![Windows](https://raw.githubusercontent.com/jorangreef/sudo-prompt/master/windows.png)
+![Linux](https://raw.githubusercontent.com/weae-g/sudo-prompt/master/linux.png)
 
-## Installation
-`sudo-prompt` has no external dependencies and does not require any native bindings.
+![Windows](https://raw.githubusercontent.com/weae-g/sudo-prompt/master/windows.png)
+
+## Установка
+
+`sudo-prompt` не имеет внешних зависимостей и не требует каких-либо встроенных привязок.
+
 ```
 npm install sudo-prompt
 ```
 
 ## Usage
-Note: Your command should not start with the `sudo` prefix.
+
+Примечание: Ваша команда не должна начинаться с префикса `sudo`.
+
 ```javascript
-var sudo = require('sudo-prompt');
+var sudo = require('sudo-prompt')
 var options = {
-  name: 'Electron',
-  icns: '/Applications/Electron.app/Contents/Resources/Electron.icns', // (optional)
-};
-sudo.exec('echo hello', options,
-  function(error, stdout, stderr) {
-    if (error) throw error;
-    console.log('stdout: ' + stdout);
-  }
-);
+	name: 'Electron',
+	icns: '/Applications/Electron.app/Contents/Resources/Electron.icns', // (optional)
+}
+sudo.exec('echo hello', options, function (error, stdout, stderr) {
+	if (error) throw error
+	console.log('stdout: ' + stdout)
+})
 ```
 
-`sudo-prompt` will use `process.title` as `options.name` if `options.name` is not provided. `options.name` must be alphanumeric only (spaces are supported) and at most 70 characters.
+`sudo-prompt` будет использовать `process.title` как `options.name`, если `options.name` не указано.`options.name` должен содержать только буквенно-цифровые символы (поддерживаются пробелы) и содержать не более 70 символов.
 
-`sudo-prompt` will preserve the current working directory on all platforms. Environment variables can be set explicitly using `options.env`.
+`sudo-prompt` сохранит текущий рабочий каталог на всех платформах. Переменные среды можно задать явно, используя `options.env`.
 
-**`sudo-prompt.exec()` is different to `child-process.exec()` in that no child process is returned (due to platform and permissions constraints).**
+**`sudo-prompt.exec()` отличается от `child-process.exec()` тем, что дочерний процесс не возвращается (из-за ограничений платформы и разрешений).**
 
 ## Behavior
-On macOS, `sudo-prompt` should behave just like the `sudo` command in the shell. If your command does not work with the `sudo` command in the shell (perhaps because it uses `>` redirection to a restricted file), then it may not work with `sudo-prompt`. However, it is still possible to use sudo-prompt to get a privileged shell, [see this closed issue for more information](https://github.com/jorangreef/sudo-prompt/issues/1).
 
-On Linux, `sudo-prompt` will use either `pkexec` or `kdesudo` to show the password prompt and run your command. Where possible, `sudo-prompt` will try and get these to mimic `sudo`. Depending on which binary is used, and due to the limitations of some binaries, the name of your program or the command itself may be displayed to your user. `sudo-prompt` will not use `gksudo` since `gksudo` does not support concurrent prompts. Passing `options.icns` is currently not supported by `sudo-prompt` on Linux. Patches are welcome to add support for icons based on `polkit`.
+В macOS `sudo-prompt` должен вести себя точно так же, как команда `sudo` в командной оболочке. Если ваша команда не работает с командой `sudo` в командной строке (возможно, потому, что она использует перенаправление `>` на файл с ограниченным доступом), то она может не работать с `sudo-prompt`. Тем не менее, по-прежнему возможно использовать sudo-запрос для получения привилегированной оболочки [дополнительную информацию смотрите в этом закрытом выпуске] (https://github.com/weae-g/sudo-prompt/issues/1).
 
-On Windows, `sudo-prompt` will elevate your command using User Account Control (UAC). Passing `options.name` or `options.icns` is currently not supported by `sudo-prompt` on Windows.
+В Linux `sudo-prompt` будет использовать либо `pkexec`, либо `kdesudo` для отображения запроса пароля и выполнения вашей команды. Там, где это возможно, `sudo-prompt` будет пытаться имитировать `sudo`. В зависимости от того, какой двоичный файл используется, и из-за ограничений некоторых двоичных файлов пользователь может увидеть название вашей программы или саму команду. В `sudo-prompt` `gksudo` не будет использоваться, поскольку `gksudo` не поддерживает одновременные запросы. Передача `options.icns` в настоящее время не поддерживается `sudo-prompt` в Linux. Исправления, добавляющие поддержку значков на основе polkit, приветствуются.
 
-## Non-graphical terminal commands only
-Just as you should never use `sudo` to launch any graphical applications, you should never use `sudo-prompt` to launch any graphical applications. Doing so could cause files in your home directory to become owned by root. `sudo-prompt` is explicitly designed to launch non-graphical terminal commands. For more information, [read this post](http://www.psychocats.net/ubuntu/graphicalsudo).
+В Windows `sudo-prompt` повысит уровень вашей команды с помощью контроля учетных записей пользователей (UAC). Передача `options.name` или `options.icns` в настоящее время не поддерживается `sudo-prompt` в Windows.
 
-## Concurrency
-On systems where the user has opted to have `tty-tickets` enabled (most systems), each call to `exec()` will result in a separate password prompt. Where `tty-tickets` are disabled, subsequent calls to `exec()` will still require a password prompt, even where the user's `sudo` timestamp file remains valid, due to edge cases with `sudo` itself, [see this discussion for more information](https://github.com/jorangreef/sudo-prompt/pull/76).
+## Только команды неграфического терминала
 
-You should never rely on `sudo-prompt` to execute your calls in order. If you need to enforce ordering of calls, then you should explicitly order your calls in your application. Where your commands are short-lived, you should always queue your calls to `exec()` to make sure your user is not overloaded with password prompts.
+Точно так же, как вы никогда не должны использовать `sudo` для запуска любых графических приложений, вы никогда не должны использовать `sudo-prompt` для запуска любых графических приложений. Это может привести к тому, что файлы в вашем домашнем каталоге станут принадлежать root. `sudo-prompt` явно предназначен для запуска неграфических команд терминала. Для получения дополнительной информации [прочитайте этот пост](http://www.psychocats.net/ubuntu/graphicalsudo).
 
-## Invalidating the timestamp
-On macOS and Linux, you can invalidate the user's `sudo` timestamp file to force the prompt to appear by running the following command in your terminal:
+## Параллелизм
+
+В системах, где пользователь решил включить `tty-tickets` (в большинстве систем), каждый вызов `exec()` приведет к отдельному запросу пароля. Если `tty-tickets` отключены, для последующих вызовов `exec()` по-прежнему будет требоваться запрос пароля, даже если файл временной метки пользователя `sudo` остается действительным из-за крайних случаев с самим `sudo`, [смотрите это обсуждение для получения дополнительной информации](https://github.com/jorangreef/sudo-prompt/pull/76).
+
+Вы никогда не должны полагаться на `sudo-prompt` для выполнения ваших вызовов по порядку. Если вам нужно обеспечить упорядочение вызовов, то вы должны явно упорядочить свои вызовы в своем приложении. Если ваши команды недолговечны, вы всегда должны ставить свои вызовы в очередь `exec()`, чтобы убедиться, что ваш пользователь не перегружен запросами пароля.
+
+## Аннулирование временной метки
+
+В macOS и Linux вы можете аннулировать файл временной метки пользователя sudo, чтобы принудительно отобразить запрос, выполнив в своем терминале следующую команду:
 
 ```sh
 $ sudo -k
